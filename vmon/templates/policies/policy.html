@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1 id="myHeader" class="page-header">{% block title %} {{ policyName }} {% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<!--<hr>-->
+
+<nav>
+    <div class="nav nav-pills" id="nav-tab" role="tablist">
+        <!-- Tree diagram tab header -->
+        <button class="nav-link active" id="nav-diagram-tab" data-bs-toggle="tab" data-bs-target="#nav-diagram"
+                type="button"
+                role="tab" aria-controls="nav-diagram" aria-selected="true">Diagram
+        </button>
+        <!-- JSON tab header -->
+        <button class="nav-link" id="nav-json-tab" data-bs-toggle="tab" data-bs-target="#nav-json" type="button"
+                role="tab" aria-controls="nav-json" aria-selected="false">JSON Definition
+        </button>
+    </div>
+</nav>
+
+<br>
+
+<div class="tab-content" id="nav-tabContent">
+
+    <!-- Tree diagram tab content -->
+    <div class="tab-pane fade show active" id="nav-diagram" role="tabpanel" aria-labelledby="nav-diagram-tab">
+        <div class="row">
+            <div class="col-lg-12" id="policyFormContainer">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12" id="policySVGContainer">
+            </div>
+        </div>
+    </div>
+    <!-- end of Tree diagram tab content -->
+
+    <!-- JSON tab content -->
+    <div class="tab-pane fade" id="nav-json" role="tabpanel" aria-labelledby="nav-json-tab">
+        <div class="row">
+            <div class="col-lg-12">
+        <pre class="col-lg-12">
+          <code id="myJSON" class="language-json">
+
+          </code>
+      </pre>
+            </div>
+        </div>
+    </div>
+    <!-- end of JSON tab content -->
+
+
+    <script src="{{ url_for('static' , filename='policies.js') }}" type=" text/javascript"></script>
+    <script>
+$(document).ready(function () {
+  const policyId = '{{ policyId }}';
+  const policyFlavor = '{{ flavor }}';
+  const policyDataURL = "{{ url_for('policies.tree', id=policyId, flavor=flavor) }}";
+
+  $('#loader').show();
+  // Attempt load from cache
+  let cache = sessionStorage.getItem('policyCache-'+policyId);
+  if (cache != null) {
+    let policy = JSON.parse(cache);
+    let svg = policySVG(policy);
+    $('#myHeader').html(policy.name);
+    $('#policySVGContainer').html(svg);
+    renderJSON(policy,'myJSON');
+  }
+  // Get fresh data from server
+  getURL(policyDataURL).then(policy => {
+    //console.log(policy);
+    $('#loader').hide();
+    if (policy.hasOwnProperty('id')) {
+      // Save to sessionStorage
+      sessionStorage.setItem('policyCache-' + policyId, JSON.stringify(policy));
+      // Render data
+      let svg = policySVG(policy,'#policySVGContainer');
+      $('#policySVGContainer').html(svg);
+      $('#myHeader').html(policy.name);
+      renderJSON(policy,'myJSON');
+      // Render form
+      policyForm('policyForm',policy,function (form) {
+          $('#policyFormContainer').html(form);
+          // Refresh diagram button
+          $("a.policyRefresh").click(function (e) {
+            // Read filter, get data & render diagram
+            let data = JSON.parse(sessionStorage.getItem('policyCache-'+policyId));
+            let filtered = policyFilter(data,'#policyForm');
+            let svg = policySVG(filtered, '#policyVGContainer');
+            $('#policySVGContainer').html(svg);
+            renderJSON(filtered,'myJSON');
+          });
+        });
+    } else {
+      // Show error
+      $('#policySVGContainer').html(makeAlert('warning', 'Oops!', 'Failed to get data; please retry', false));
+    }
+  });
+
+//  // Debug vManage RAW data
+//  getPolicyData(policyId,policyFlavor).then(policy => {
+//    console.log(policy);
+//   getPolicyDefinitionData(policy.policyDefinition.assembly).then(definitions => {
+//     console.log(definitions);  
+//     getPolicyListData(definitions).then(lists=>{
+//       console.log(lists);
+//     });
+//   });
+// });
+
+});
+
+    </script>
+    {% endblock %}

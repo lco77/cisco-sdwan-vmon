@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1 class="page-header">{% block title %}Settings{% endblock %}</h1>
+
+{% endblock %}
+
+{% block content %}
+<nav>
+    <div class="nav nav-pills" id="nav-tab" role="tablist">
+        <!-- Summary tab header -->
+        <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button"
+                role="tab" aria-controls="nav-home" aria-selected="true">vManage connections
+        </button>
+    </div>
+</nav>
+<br>
+<!-- Tab contents -->
+<div class="tab-content" id="nav-tabContent">
+    <!-- Summary tab content -->
+    <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+        <div class="row">
+            <div class="col-lg-12">
+                <table id="myTable" class="table table-striped table-secondary">
+                    <thead>
+                    <tr>
+                        <th>vManage URL</th>
+                        <th>Username</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for connection in connections %}
+                    <tr>
+                        <td class="text-nowrap">
+                            {{ connection['server'] }}
+                            {% if connection['server'] == session['vServer'] %}
+                            <span class="badge bg-success">Active</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ connection['username'] }}</td>
+                        <td>{{ connection['description'] }}</td>
+                        <td>
+                            {% if g.user['id'] == connection['user_id'] %}
+                            <!-- Start delete form here to align action buttons properly -->
+                            <form action="{{ url_for('connections.delete', id=connection['id']) }}" method="post">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <a class="btn btn-success"
+                                   href="{{ url_for('connections.connect', id=connection['id']) }}">Test</a>
+                                <a class="btn btn-primary"
+                                   href="{{ url_for('connections.update', id=connection['id']) }}">Edit</a>
+                                <input class="btn btn-danger" type="submit" value="Delete"
+                                       onclick="return confirm('Are you sure?');">
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if not loop.last %}
+                    {% endif %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <br>
+            </div>
+        </div>
+        {% if g.user %}
+        <div class="row">
+            <div class="col-lg-12">
+                <a id="btnShowModal" class="btn btn-info" href="{{ url_for('connections.create') }}">New connection</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <!-- end of Summary tab content -->
+</div>
+<!-- end of tab contents -->
+
+<script>
+  $(document).ready(function () {
+    $('#myTable').DataTable({
+      "pageLength": 200
+    });
+  });
+
+</script>
+
+{% endblock %}

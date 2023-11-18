@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1 class="page-header">{% block title %}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div id="myModal" class="modal fade" data-bs-backdrop="static" tabindex="-1" aria-labelledby="myModal-title"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="myModal-title">Edit "{{ connection['server'] }}"</h5>
+                <button id="btnCloseModal" type="button" class="btn-close" data-bs-dismiss="modal"
+                        data-bs-target="#myModal"
+                        aria-label="Close"></button>
+            </div>
+            <form method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="form-group col-lg-12">
+                        <label for="server">vManage URL</label>
+                        <input class="form-control" type="text" name="server" id="server"
+                               value="{{ connection['server'] }}" required>
+                        {% if form.server.errors %}
+                        <ul class="errors">
+                            {% for error in form.server.errors %}
+                            <li class="text-danger">{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        <br>
+                        <label for="username">Username</label>
+                        <input class="form-control" type="text" name="username" id="username"
+                               value="{{ connection['username'] }}" required>
+                        {% if form.username.errors %}
+                        <ul class="errors">
+                            {% for error in form.username.errors %}
+                            <li class="text-danger">{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        <br>
+                        <label for="password">Password</label>
+                        <input class="form-control" type="password" name="password" id="password"
+                               value="{{ connection['password'] }}" required>
+                        {% if form.password.errors %}
+                        <ul class="errors">
+                            {% for error in form.password.errors %}
+                            <li class="text-danger">{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        <br>
+                        <label for="description">Description</label>
+                        <input class="form-control" type="text" name="description" id="description"
+                               value="{{ connection['description'] }}" required>
+                        {% if form.description.errors %}
+                        <ul class="errors">
+                            {% for error in form.description.errors %}
+                            <li class="text-danger">{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        <br>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <input id="btnSaveServer" class="btn btn-primary" type="submit" value="Save">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+  $(document).ready(function () {
+    const myModal = new bootstrap.Modal(document.getElementById('myModal'));
+    myModal.show();
+    $('#btnCloseModal').click(function(e){ history.back(); })
+  });
+
+</script>
+
+{% endblock %}

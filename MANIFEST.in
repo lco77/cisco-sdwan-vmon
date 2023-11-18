@@ -1,0 +1,4 @@
+include vmon/schema.sql
+graft vmon/static
+graft vmon/templates
+global-exclude *.pyc

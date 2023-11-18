@@ -1,0 +1,18 @@
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS connections;
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL
+);
+CREATE TABLE connections (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  server TEXT NOT NULL,
+  username TEXT NOT NULL,
+  password TEXT NOT NULL,
+  description TEXT NOT NULL,
+  token TEXT NOT NULL,
+  cookie TEXT NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);

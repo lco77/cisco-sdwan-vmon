@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Connect to "{{ connection.server }}"{% endblock %}
+{% block header %}
+{% endblock %}
+{% block content %}
+<div id="myModal" class="modal fade" data-bs-backdrop="static" tabindex="-1" aria-labelledby="myModal-title"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="myModal-title">Connect to "{{ connection.server }}"</h5>
+                <button id="btnCloseModal" type="button" class="btn-close" data-bs-dismiss="modal"
+                        data-bs-target="#myModal"
+                        aria-label="Close"></button>
+            </div>
+            {% if error %}
+            <div class="modal-body text-white bg-danger">
+                {% else %}
+                <div class="modal-body text-white bg-success">
+                    {% endif %}
+                    {% if error %}
+                    <h3 class="text-center">{{ error }}</h3>
+                    {% else %}
+                    <h3 class="text-center">Connection succeeded</h3>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    $(document).ready(function () {
+      const myModal = new bootstrap.Modal(document.getElementById('myModal'));
+      myModal.show();
+      $('button').click(function (e) { history.back(); })
+    });
+
+    </script>
+    {% endblock %}

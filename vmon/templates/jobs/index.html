@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1 class="page-header">{% block title %}Jobs{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<nav>
+    <!-- TAB nav -->
+    <div class="nav nav-pills" id="nav-tab" role="tablist"></div>
+    </div>
+    <!-- TAB content -->
+    <div class="tab-content col-md-10" id="nav-tabContent">
+    </div>
+</nav>
+
+<!-- edit modal -->
+<div id="editModal" class="modal fade" data-bs-backdrop="static" tabindex="-1" aria-labelledby="editModal-title"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+        <div class="modal-content">
+            <!-- Modal header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModal-title"></h5>
+                <button id="btnCloseModal" type="button" class="btn-close" data-bs-dismiss="modal"
+                        data-bs-target="#editModal" aria-label="Close"></button>
+            </div>
+            <div id="editModal-body" class="modal-body text-white">
+            </div>
+            <div id="editModal-footer" class="modal-footer text-white">
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end of modal -->
+
+<script>
+    $(document).ready(function () {
+        var apiJobs = '{{ url_for("api.jobs")}}';
+        showJobs(apiJobs,'nav-tab','nav-tabContent');
+    });
+
+</script>
+
+{% endblock %}

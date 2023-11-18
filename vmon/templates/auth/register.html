@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1 class="page-header">{% block title %}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<!-- Register modal -->
+<div id="modal-register" class="modal fade" data-bs-backdrop="static" tabindex="-1"
+     aria-labelledby="modal-register-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-register-title">Register</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" data-bs-target="#modal-register"
+                        aria-label="Close"></button>
+            </div>
+            <!-- Form -->
+            <form id="form-register" method="post">
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="form-group col-lg-12">
+                        <label for="username">Email</label>
+                        <input class="form-control" name="username" id="username" required>
+                        {% if error %}
+                        <ul class="errors">
+                            <li class="text-danger">{{ error }}</li>
+                        </ul>
+                        {% endif %}
+                        {% if form.username.errors %}
+                        <ul class="errors">
+                            {% for error in form.username.errors %}
+                            <li class="text-danger">{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        <br>
+                        <label for="password">Password</label>
+                        <input class="form-control" autocomplete="new-password" type="password" name="password"
+                               id="password" required>
+                        {% if form.password.errors %}
+                        <ul class="errors">
+                            {% for e in form.password.errors %}
+                            <li class="text-danger">{{ e }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        <br>
+                    </div>
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <input id="register" class="btn btn-primary" type="submit" value="Register">
+                </div>
+            </form>
+            <!-- End of Form -->
+        </div>
+    </div>
+</div>
+<script>
+  $(document).ready(function () {
+    const modalRegister = new bootstrap.Modal(document.getElementById('modal-register'));
+    modalRegister.show();
+  });
+
+</script>
+{% endblock %}

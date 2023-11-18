@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1 class="page-header">{% block title %}Lists{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- TAB nav -->
+    <div class="col-md-2">
+        <nav class="nav nav-pills flex-column " id="nav-tab" role="tablist">
+        </nav>
+    </div>
+    <!-- TAB content -->
+    <div class="tab-content col-md-10" id="nav-tabContent">
+    </div>
+</div>
+<!-- end of TAB content -->
+
+<!-- edit modal -->
+<div id="editModal" class="modal fade" data-bs-backdrop="static" tabindex="-1" aria-labelledby="editModal-title"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+        <div class="modal-content">
+            <!-- Modal header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModal-title"></h5>
+                <button id="btnCloseModal" type="button" class="btn-close" data-bs-dismiss="modal"
+                        data-bs-target="#editModal" aria-label="Close"></button>
+            </div>
+            <div id="editModal-body" class="modal-body text-white">
+            </div>
+            <div id="editModal-footer" class="modal-footer text-white">
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end of modal -->
+
+<script src="{{ url_for('static' , filename='lists.js') }}" type="text/javascript"></script>
+<script>
+    $(document).ready(function () {
+        makeListTabs('nav-tab', 'nav-tabContent', function () {
+            $("button.list").click(function (e) {
+                $('#loader').show();
+                var object = $(this).attr('data-object');
+                crud('index',object).then(
+                    data=>{$('#loader').hide();
+                    makeListTable(object, data);
+                });
+            });
+        });
+    });
+
+</script>
+
+{% endblock %}

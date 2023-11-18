@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}
+Dashboard
+{% endblock %}
+
+
+{% block content %}
+<!-- Servers to include in dashboard -->
+{% for c in connections %}
+<input type="hidden"
+       class="connection"
+       id="connection-{{c.id}}"
+       data-id="{{c.id}}"
+       data-server="{{c.server}}"
+       data-desc="{{c.description}}"
+>
+{% endfor %}
+<!-- dashboard container -->
+<div id="dashboard" class="container-fluid">
+
+</div>
+<!-- end of dashboard container -->
+
+
+<script src="{{ url_for('static' , filename='dashboard.js') }}" type=" text/javascript"></script>
+<script>
+    // Configuration
+    var static = "{{ url_for('static', filename='') }}";
+    var api    = "{{ url_for('dashboard.data', id='') }}";
+    var container = "dashboard";
+    var updateInterval = 300000;
+    // Wait for DOM
+    $(document).ready(function () {
+        $('input.connection').map(async function(e){
+            let id = $(this).attr('data-id');
+            let server = $(this).attr('data-server');
+            let description = $(this).attr('data-desc');
+            await makeDashboard(api,id,server,description,container);
+        })
+    });
+
+</script>
+{% endblock %}

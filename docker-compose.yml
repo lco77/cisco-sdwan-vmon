@@ -1,0 +1,44 @@
+version: "3.7"
+services:
+    vmon-web:
+        image: registry.company.com/nws/vmon-prod:latest
+        container_name: vmon-web
+        hostname: vmon-web
+        networks:
+          - vmon
+        restart: unless-stopped
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.vmon-prod.entrypoints=websecure
+            - traefik.http.routers.vmon-prod.rule=Host(`vmon.company.com`)
+            - traefik.http.routers.vmon-prod.tls=true
+            - traefik.http.routers.vmon-prod.service=vmon-prod
+            - traefik.http.services.vmon-prod.loadbalancer.server.port=5000
+            - traefik.docker.network=vmon
+            - com.centurylinklabs.watchtower.enable=true
+        healthcheck:
+          test: curl --fail -s http://localhost:5000/ || exit 1
+          interval: 1m30s
+          timeout: 10s
+          retries: 3
+
+    vmon-worker:
+      image: registry.company.com/nws/vmon-prod:latest
+      command: rq worker vmonJobs --url redis://redis:6379/0
+      working_dir: /vmon
+      container_name: vmon-worker
+      hostname: vmon-worker
+      networks:
+        - vmon
+      restart: unless-stopped
+      labels:
+        - com.centurylinklabs.watchtower.enable=true
+
+networks:
+  vmon:
+    driver: bridge
+    name: vmon
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.12.0/24

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1 class="page-header">{% block title %}Policies{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<!--<hr>-->
+
+<nav>
+    <div class="nav nav-pills" id="nav-tab" role="tablist">
+        <!-- vSmart tab header -->
+        <button class="nav-link active" id="nav-vsmart-tab" data-bs-toggle="tab" data-bs-target="#nav-vsmart"
+                type="button"
+                role="tab" aria-controls="nav-vsmart" aria-selected="true">vSmart
+        </button>
+        <!-- vEdge tab header -->
+        <button class="nav-link" id="nav-vedge-tab" data-bs-toggle="tab" data-bs-target="#nav-vedge" type="button"
+                role="tab" aria-controls="nav-vedge" aria-selected="false">vEdge
+        </button>
+        <!-- security tab header -->
+        <button class="nav-link" id="nav-security-tab" data-bs-toggle="tab" data-bs-target="#nav-security" type="button"
+                role="tab" aria-controls="nav-security" aria-selected="false">Security
+        </button>
+    </div>
+</nav>
+
+<br>
+
+<div class="tab-content" id="nav-tabContent">
+    <!-- vsmart tab content -->
+    <div class="tab-pane fade show active" id="nav-vsmart" role="tabpanel" aria-labelledby="nav-vsmart-tab">
+        <div class="row">
+            <div class="col-lg-12">
+                <table id="vsmartTable" class="table table-striped table-secondary" width="100%">
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- end of vsmart tab content -->
+
+    <!-- vedge tab content -->
+    <div class="tab-pane fade" id="nav-vedge" role="tabpanel" aria-labelledby="nav-vedge-tab">
+        <div class="row">
+            <div class="col-lg-12">
+                <table id="vedgeTable" class="table table-striped table-secondary" width="100%">
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- end of vedge tab content -->
+
+    <!-- security tab content -->
+    <div class="tab-pane fade" id="nav-security" role="tabpanel" aria-labelledby="nav-security-tab">
+        <div class="row">
+            <div class="col-lg-12">
+                <table id="securityTable" class="table table-striped table-secondary" width="100%">
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- end of security tab content -->
+</div>
+
+<!-- Render policy tables -->
+<script>
+  $(document).ready(function () {
+    $('#loader').show();
+    // Map policy types to API objects
+    var objects = [
+      { 'name':'vSmart',   'selector':'#vsmartTable',   'action':'index', 'object': 'template_policy_vsmart',   'url':'{{url_for("policies.show",flavor="vsmart", id="")}}'  },
+      { 'name':'vEdge',    'selector':'#vedgeTable',    'action':'index', 'object': 'template_policy_vedge',    'url':'{{url_for("policies.show",flavor="vedge", id="")}}'   },
+      { 'name':'Security', 'selector':'#securityTable', 'action':'index', 'object': 'template_policy_security', 'url':'{{url_for("policies.show",flavor="security", id="")}}'},
+    ];
+    // Link template
+    const link = (href,name) => `<a class="fw-bold" href=${href}>${name}</a>`;
+    // Fire async requests
+    cruds(objects).then(data => {
+      $('#loader').hide();
+      data.forEach(e => {
+        let name     = e.name;
+        let selector = e.selector;
+        let url      = e.url;
+        let data     = e.data;
+        // Render tables
+        $(selector).DataTable({
+          data: data.data,
+          columns: data.header.columns.map(e => { return { 'data': e.property, 'title': e.title, 'visible': true } })
+                                      .filter(e => e.data != 'policyDefinition' ),
+          columnDefs: [{
+            targets: '_all',
+            defaultContent: '--'
+          }, { // policyName
+            targets: 0,
+            render: function (data, type, row, meta) {
+              return link(url+row.policyId,row.policyName);
+            }
+          }, { // lastUpdatedOn
+            targets: 6,
+            render: function (data, type, row, meta) {
+              return toISOStringUTC(row.lastUpdatedOn);
+            }
+          }],
+          "pageLength": 200
+        });
+      })
+    });
+  });
+
+</script>
+{% endblock %}

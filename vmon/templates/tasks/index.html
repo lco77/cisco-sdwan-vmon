@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1 class="page-header">{% block title %}Tasks{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<!-- TAB nav -->
+<nav>
+    <div class="nav nav-pills" id="nav-tab" role="tablist">
+        <!-- tasks active tab header -->
+        <button class="nav-link active" id="nav-tasks-tab" data-bs-toggle="tab" data-bs-target="#nav-tasks"
+                type="button" role="tab" aria-controls="nav-tasks" aria-selected="true">Active
+        </button>
+    </div>
+</nav>
+<!-- end of TAB nav -->
+<br>
+<!-- TAB content -->
+<div class="tab-content" id="nav-tabContent">
+    <!-- tasks tab -->
+    <div class="tab-pane fade show active" id="nav-tasks" role="tabpanel" aria-labelledby="nav-tasks-tab">
+        <div class="row">
+            <div class="col-lg-12">
+                <table id="myTable" class="table table-striped table-secondary" width="100%">
+
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- end of tasks tab -->
+</div>
+<!-- end of TAB content -->
+
+<!-- modal tasks details -->
+<div id="taskModal" class="modal fade" data-bs-backdrop="static" tabindex="-1" aria-labelledby="taskModal-title"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+        <div class="modal-content">
+            <!-- Modal header -->
+            <div class="modal-header">
+
+                <h5 class="modal-title" id="taskModal-title">Task details</h5>
+                <button id="refreshTaskBtn" type="button" class="refresh-task btn" data-id=""><i
+                        class="fas fa-sync"></i></button>
+                <button id="btnCloseModal" type="button" class="btn-close" data-bs-dismiss="modal"
+                        data-bs-target="#taskModal" aria-label="Close"></button>
+            </div>
+            <div id="taskModalBody" class="modal-body text-white">
+                <div id="taskModalBodyValidation" class=""></div>
+                <br>
+                <table id="taskModalBodyTasks" class="table table-striped" style="width:100%;"></table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end of modal task details -->
+
+<!-- Tasks -->
+<script>
+    $(document).ready(function () {
+        // Task modal config
+        const taskModal = new bootstrap.Modal(document.getElementById('taskModal'));
+        // Init columns
+        var columns = [
+            {'title': 'Action','data': 'name','visible': true},
+            {'title': 'Sub-tasks','data': 'total','visible': true},
+            {'title': 'Status','data': 'status','visible': true},
+            {'title': 'Owner','data': 'userSessionUserName','visible': true},
+            {'title': 'Start time','data': 'startTime','visible': true},
+            {'title': 'End time','data': 'endTime','visible': true},
+            {'title': 'Actions','data': 'action','visible': true},
+            {'title': 'processId','data': 'processId','visible': false},
+        ];
+        // Show spinner
+        $('#loader').show();
+        // Get tasks
+        crud('index','client_activity_summary').then(result=>{
+        //getList('task_summary',null,function(result){   
+            if (result.error){ $('#myTable').replaceWith(`
+                <div class="alert alert-primary">
+                <h4 class="alert-heading text-center">Missing Context</h4>
+                <p class="mb-0 text-center">Select a context from the top menu</p>
+                </div>`) }
+            $('#loader').hide();
+            // Init datatable
+            $('#myTable').DataTable({
+                data: result.data,
+                order: [[4,"desc"]],
+                columns: columns,
+                columnDefs: [{
+                    targets: '_all',
+                    defaultContent: '--'
+                },{ // Start time
+                    targets: 4,
+                    render: function (data, type, row, meta) {
+                        return toISOStringUTC(data);
+                    }                    
+                },{ // End time
+                    targets: 5,
+                    render: function (data, type, row, meta) {
+                        return toISOStringUTC(data);
+                    }                    
+                },{ // Actions
+                    targets: 6,
+                    render: function (data, type, row, meta) {
+                        const btnShow   = (uuid)       => `<button class="show-task btn btn-info"     id="btnShow-${uuid}" data-id="${uuid}">Show</button>`;
+                        const btnAck    = (uuid)       => `<button class="clear-task btn btn-success" id="btnAck-${uuid}" data-id="${uuid}">Clear</button>`;
+                        const btnClean  = (uuid)       => `<button class="clean-task btn btn-warning" id="btnAck-${uuid}" data-id="${uuid}">Force Clear</button>`;
+                        const btnCancel = (uuid)       => `<button class="cancel-task btn btn-danger" id="btnAck-${uuid}" data-id="${uuid}">Cancel</button>`;
+                        //const btnGrp    = (btnA, btnB, btnC, btnD) => `<p class="bs-component">${btnA} ${btnB} ${btnC} ${btnD}</p>`;
+                        const btnGrp    = (btnTmp) => `<p class="bs-component">${btnTmp}</p>`;
+                        if (!row.acknowledged) {
+                            let btnTmp = btnShow(row.processId) + ' ' + btnAck(row.processId);
+                            if (row.status != 'done') { btnTmp = btnTmp + ' ' + btnClean(row.processId) + ' ' + btnCancel(row.processId)};
+                            return btnGrp(btnTmp);
+                        }
+                    } 
+                }],
+                "pageLength": 200
+            });
+            // Attach Show details task event
+            $(document).on('click', 'button.show-task',function(e){
+                taskModal.show();
+                let id = $(this).attr('data-id');
+                $('#refreshTaskBtn').attr('data-id',id);
+                $('#taskModalBodyValidation').html('');
+                $('#taskModalBodyTasks').html('');
+                showTaskDetails(id,'taskModal','taskModalBodyValidation','taskModalBodyTasks','loader',10000);
+            });
+             // Attach Refresh details task event
+             $(document).on('click', 'button.refresh-task',function(e){
+                let id = $(this).attr('data-id');
+                showTaskDetails(id,'taskModal','taskModalBodyValidation','taskModalBodyTasks','loader',10000);
+            });           
+            // Attach Clear task event
+            $(document).on('click', 'button.clear-task',function(e){
+                $('#loader').show();
+                let id = $(this).attr('data-id');
+                crud('delete','device_action_status_clear',{'processId':id}).then(data=>{
+                    $('#loader').hide();
+                    if (data.error) {
+                        console.log('Error');
+                    } else {
+                        $('#btnAck-'+id).hide();
+                        
+                    }
+                });             
+            });
+            // Attach Force clear (Clean) task event
+            $(document).on('click', 'button.clean-task',function(e){
+                $('#loader').show();
+                let id = $(this).attr('data-id');
+                crud('read','device_action_status_tasks_clean',{'processId':id}).then(result=>{
+                    $('#loader').hide();
+                    $('#taskModalBodyCode').text(JSON.stringify(result, null, 2));
+                    taskModal.show();
+                });
+            });
+            // Attach Canceltask event
+            $(document).on('click', 'button.cancel-task',function(e){
+                $('#loader').show();
+                let id = $(this).attr('data-id');
+                crud('edit','device_action_status_cancel_by_processId',{'processId':id}).then(result=>{
+                    $('#loader').hide();
+                    $('#taskModalBodyCode').text(JSON.stringify(result, null, 2));
+                    taskModal.show();
+                });
+            });
+        });
+    });
+
+</script>
+{% endblock %}

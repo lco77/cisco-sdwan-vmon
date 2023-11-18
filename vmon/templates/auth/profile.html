@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1 class="page-header">{% block title %}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<!-- Profile modal -->
+<div id="modal-profile" class="modal fade" data-bs-backdrop="static" tabindex="-1" aria-labelledby="modal-profile-title"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modal header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-profile-title">My account</h5>
+                <button id="btnCloseModal" type="button" class="btn-close" data-bs-dismiss="modal"
+                        data-bs-target="#modal-profile" aria-label="Close"></button>
+            </div>
+            <!-- Form -->
+            <form id="form-profile" method="post">
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <h4 class="alert-heading text-center">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Danger zone
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </h4>
+                        <p class="text-center">There will be no way back if you click on this button:</p>
+                        <div class="d-grid gap-2">
+                            <button id="deleteMyAccount" data-id="{{id}}" type="button" class="btn btn-danger">Delete my
+                                account
+                            </button>
+                        </div>
+
+                    </div>
+                    <br>
+
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="form-group col-lg-12">
+                        {% if error != '' %}
+                        <label class="text-danger">
+                            {{ error }}
+                        </label>
+                        {% endif %}
+                        <br>
+                        <label for="password">Current Password</label>
+                        <input class="form-control" autocomplete="current-password" type="password" name="password"
+                               id="password" required>
+                        {% if form.password.errors %}
+                        <ul class="errors">
+                            {% for e in form.password.errors %}
+                            <li class="text-danger">{{ e }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        <br>
+                        <label for="password">New Password</label>
+                        <input class="form-control" autocomplete="new-password" type="password" name="password_new1"
+                               id="password_new1" required>
+                        {% if form.password_new1.errors %}
+                        <ul class="errors">
+                            {% for e in form.password_new1.errors %}
+                            <li class="text-danger">{{ e }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        <br>
+                        <label for="password">New Password (repeat)</label>
+                        <input class="form-control" autocomplete="new-password" type="password" name="password_new2"
+                               id="password_new2" required>
+                        {% if form.password_new2.errors %}
+                        <ul class="errors">
+                            {% for e in form.password_new2.errors %}
+                            <li class="text-danger">{{ e }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        <br>
+                    </div>
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <input id="profile" class="btn btn-primary" type="submit" value="Save password">
+                </div>
+            </form>
+            <!-- End of Form -->
+        </div>
+    </div>
+</div>
+
+
+<script>
+    var deleteMyAccountUrl="{{ url_for('auth.delete', id=id) }}";
+    // AJAX config
+    var csrftoken = $('meta[name=csrf-token]').attr('content')
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken)
+            }
+        },
+        contentType: 'application/json;'
+    });
+    $(document).ready(function () {
+      // Modal
+      const modalProfile = new bootstrap.Modal(document.getElementById('modal-profile'));
+      modalProfile.show();
+      $('#btnCloseModal').click(function(e){ history.back(); })
+      // Delete account
+      $('#deleteMyAccount').click(function(e){
+        $.ajax({
+            url: deleteMyAccountUrl,
+            type: 'DELETE',
+            success: function (data) {
+              if (data.redirect) {
+                window.location.replace(data.redirect);
+              }
+            }
+        });
+
+      });
+    });
+
+</script>
+{% endblock %}
